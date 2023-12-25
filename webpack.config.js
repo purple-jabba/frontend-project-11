@@ -29,6 +29,7 @@ export default {
       },
     ],
   },
+  entry: './src/index.js',
   plugins: [
     new HtmlWebpackPlugin({
       template: 'index.html',
