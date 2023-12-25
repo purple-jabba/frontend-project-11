@@ -1,8 +1,15 @@
 /* eslint no-param-reassign: ["error", { "props": false }] */
 
-const invalidForm = (form, feedback) => {
+export const invalidForm = (form, feedback, message) => {
   form.classList.add('is-invalid');
-  feedback.textContent = 'Ссылка должна быть валидным URL';
+  feedback.classList.replace('text-success', 'text-danger');
+  feedback.textContent = message;
 };
 
-export default invalidForm;
+export const successAdd = (form, feedback, message) => {
+  form.classList.remove('is-invalid');
+  form.value = '';
+  feedback.classList.replace('text-danger', 'text-success');
+  feedback.textContent = message;
+  form.focus();
+};
