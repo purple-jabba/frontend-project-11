@@ -38,6 +38,8 @@ export default () => {
       case 'errors':
         invalidForm(elements.inputForm, elements.feedback);
         break;
+      case 'urlFeeds':
+        break;
       default: throw new Error(`Path doesn't exist ${path}`);
     }
   });
