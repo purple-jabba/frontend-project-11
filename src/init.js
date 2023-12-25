@@ -1,17 +1,26 @@
 import onChange from 'on-change';
 import * as yup from 'yup';
-import invalidForm from './render.js';
+import i18next from 'i18next';
+import { invalidForm, successAdd } from './render.js';
+import resources from './locales/index.js';
 
 const validateUrl = (url, urls) => {
   const schema = yup.string().trim()
-    .required('form is empty')
-    .url('invalid form')
-    .notOneOf(urls, 'url already exists');
+    .required('empty-form')
+    .url('invalid-form')
+    .notOneOf(urls, 'url-already-exists');
   return schema.validate(url);
 };
 
 export default () => {
   const defaultLanguage = 'ru';
+
+  const i18nextInstance = i18next.createInstance();
+  i18nextInstance.init({
+    lng: defaultLanguage,
+    debug: true,
+    resources,
+  });
 
   const elements = {
     form: document.querySelector('.rss-form'),
@@ -23,22 +32,24 @@ export default () => {
   const initialState = {
     lng: defaultLanguage,
     form: {
-      process: {
-        state: '',
-      },
+      processState: 'initial',
+      feedUrls: [],
+      feeds: [],
+      posts: [],
+      error: '',
     },
-    urlFeeds: [],
-    feeds: [],
-    posts: [],
-    errors: [],
   };
 
-  const state = onChange(initialState, (path) => {
+  const state = onChange(initialState, (path, value) => {
+    console.log(value);
     switch (path) {
-      case 'errors':
-        invalidForm(elements.inputForm, elements.feedback);
+      case 'form.processState':
         break;
-      case 'urlFeeds':
+      case 'form.feedUrls':
+        successAdd(elements.inputForm, elements.feedback, i18nextInstance.t('success'));
+        break;
+      case 'form.error':
+        invalidForm(elements.inputForm, elements.feedback, value);
         break;
       default: throw new Error(`Path doesn't exist ${path}`);
     }
@@ -47,9 +58,26 @@ export default () => {
   elements.form.addEventListener('submit', (event) => {
     event.preventDefault();
     const url = elements.inputForm.value;
-    validateUrl(url, state.urlFeeds)
-      .then((response) => state.urlFeeds.push(response))
-      .catch((error) => state.errors.push(error.message))
-      .then(console.log(state));
+    validateUrl(url, state.form.feedUrls)
+      .then((response) => {
+        state.form.processState = 'loading';
+        state.form.feedUrls.push(response);
+      })
+      .catch((error) => {
+        state.form.processState = 'error';
+        const { message } = error;
+        switch (message) {
+          case 'empty-form':
+            state.form.error = i18nextInstance.t('fail.emptyForm');
+            break;
+          case 'invalid-form':
+            state.form.error = i18nextInstance.t('fail.invalid');
+            break;
+          case 'url-already-exists':
+            state.form.error = i18nextInstance.t('fail.alreadyExists');
+            break;
+          default: throw new Error(`Message doesn't exist ${error.message}`);
+        }
+      });
   });
 };
