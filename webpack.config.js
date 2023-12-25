@@ -1,4 +1,5 @@
 import HtmlWebpackPlugin from 'html-webpack-plugin';
+import path from 'node:path';
 
 export default {
   mode: process.env.NODE_ENV || 'development',
@@ -30,12 +31,13 @@ export default {
     ],
   },
   entry: './src/index.js',
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'main.js',
+  },
   plugins: [
     new HtmlWebpackPlugin({
       template: 'index.html',
     }),
   ],
-  output: {
-    clean: true,
-  },
 };
