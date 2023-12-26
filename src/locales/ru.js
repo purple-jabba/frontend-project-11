@@ -6,6 +6,7 @@ export default {
       invalid: 'Ссылка должна быть валидным URL',
       alreadyExists: 'RSS уже существует',
       emptyForm: 'Заполните форму',
+      networkError: 'Ошибка сети',
     },
   },
 };
