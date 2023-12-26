@@ -1,8 +1,9 @@
 import onChange from 'on-change';
 import * as yup from 'yup';
 import i18next from 'i18next';
-import { invalidForm, successAdd } from './render.js';
+import axios from 'axios';
 import resources from './locales/index.js';
+import { invalidForm, successAdd } from './render.js';
 
 const validateUrl = (url, urls) => {
   const schema = yup.string().trim()
@@ -36,7 +37,7 @@ export default () => {
       feedUrls: [],
       feeds: [],
       posts: [],
-      error: '',
+      error: 'none',
     },
   };
 
@@ -62,6 +63,10 @@ export default () => {
       .then((response) => {
         state.form.processState = 'loading';
         state.form.feedUrls.push(response);
+        axios.get(response)
+          .then((responses) => responses.text())
+          .then((str) => new window.DOMParser().parseFromString(str, 'text/xml'))
+          .then((data) => console.log(data));
       })
       .catch((error) => {
         state.form.processState = 'error';
