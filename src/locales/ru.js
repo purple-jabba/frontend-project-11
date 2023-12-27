@@ -1,12 +1,17 @@
 export default {
   translation: {
-    success: 'RSS Успешно загружен',
-    fail: {
+    successMessage: 'RSS Успешно загружен',
+    failMessages: {
       notContainRss: 'Ресурс не содержит валидный RSS',
       invalid: 'Ссылка должна быть валидным URL',
       alreadyExists: 'RSS уже существует',
       emptyForm: 'Заполните форму',
       networkError: 'Ошибка сети',
     },
+    titles: {
+      feeds: 'Фиды',
+      posts: 'Посты',
+    },
+    watchPost: 'Просмотр',
   },
 };
