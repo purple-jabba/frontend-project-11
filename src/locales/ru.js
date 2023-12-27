@@ -1,6 +1,6 @@
 export default {
   translation: {
-    successMessage: 'RSS Успешно загружен',
+    successMessage: 'RSS успешно загружен',
     failMessages: {
       notContainRss: 'Ресурс не содержит валидный RSS',
       invalid: 'Ссылка должна быть валидным URL',
