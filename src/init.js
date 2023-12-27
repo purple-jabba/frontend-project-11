@@ -3,13 +3,14 @@ import * as yup from 'yup';
 import i18next from 'i18next';
 import axios from 'axios';
 import resources from './locales/index.js';
-import { invalidForm, successAdd } from './render.js';
+import * as render from './render.js';
+import parser from './parser.js';
 
 const validateUrl = (url, urls) => {
   const schema = yup.string().trim()
-    .required('empty-form')
-    .url('invalid-form')
-    .notOneOf(urls, 'url-already-exists');
+    .required('form is empty')
+    .url('form is invalid')
+    .notOneOf(urls, 'url already exists');
   return schema.validate(url);
 };
 
@@ -42,15 +43,18 @@ export default () => {
   };
 
   const state = onChange(initialState, (path, value) => {
-    console.log(value);
     switch (path) {
       case 'form.processState':
         break;
+      case 'form.feeds':
+        break;
+      case 'form.posts':
+        break;
       case 'form.feedUrls':
-        successAdd(elements.inputForm, elements.feedback, i18nextInstance.t('success'));
+        render.successNotification(elements.inputForm, elements.feedback, i18nextInstance.t('success'));
         break;
       case 'form.error':
-        invalidForm(elements.inputForm, elements.feedback, value);
+        render.failNotification(elements.inputForm, elements.feedback, value);
         break;
       default: throw new Error(`Path doesn't exist ${path}`);
     }
@@ -60,26 +64,36 @@ export default () => {
     event.preventDefault();
     const url = elements.inputForm.value;
     validateUrl(url, state.form.feedUrls)
-      .then((response) => {
+      .then(() => {
         state.form.processState = 'loading';
-        state.form.feedUrls.push(response);
-        axios.get(response)
-          .then((responses) => responses.text())
-          .then((str) => new window.DOMParser().parseFromString(str, 'text/xml'))
-          .then((data) => console.log(data));
+        return axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`);
+      })
+      .then((response) => {
+        state.form.processState = 'loaded';
+        const xml = response.data.contents;
+        const { feed, posts } = parser(xml);
+        state.form.feedUrls.push(url);
+        state.form.feeds.push(feed);
+        state.form.posts.push(posts);
       })
       .catch((error) => {
         state.form.processState = 'error';
         const { message } = error;
         switch (message) {
-          case 'empty-form':
+          case 'form is empty':
             state.form.error = i18nextInstance.t('fail.emptyForm');
             break;
-          case 'invalid-form':
+          case 'form is invalid':
             state.form.error = i18nextInstance.t('fail.invalid');
             break;
-          case 'url-already-exists':
+          case 'url already exists':
             state.form.error = i18nextInstance.t('fail.alreadyExists');
+            break;
+          case 'Network Error':
+            state.form.error = i18nextInstance.t('fail.networkError');
+            break;
+          case 'rss is not found':
+            state.form.error = i18nextInstance.t('fail.notContainRss');
             break;
           default: throw new Error(`Message doesn't exist ${error.message}`);
         }
