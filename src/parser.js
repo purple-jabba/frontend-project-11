@@ -20,7 +20,6 @@ export default (xml) => {
   items.forEach((item) => {
     const post = {
       id: uniqueId(),
-      feedId,
       title: item.querySelector('title').textContent,
       description: item.querySelector('description').textContent,
       link: item.querySelector('link').textContent,
