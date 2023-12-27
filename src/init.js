@@ -47,11 +47,15 @@ export default () => {
       case 'form.processState':
         break;
       case 'form.feeds':
+        console.log(value);
+        render.userInterfaceFeeds(value, i18nextInstance);
         break;
       case 'form.posts':
+        console.log(value);
+        render.userInterfacePosts(value, i18nextInstance);
         break;
       case 'form.feedUrls':
-        render.successNotification(elements.inputForm, elements.feedback, i18nextInstance.t('success'));
+        render.successNotification(elements.inputForm, elements.feedback, i18nextInstance.t('successMessage'));
         break;
       case 'form.error':
         render.failNotification(elements.inputForm, elements.feedback, value);
@@ -74,26 +78,26 @@ export default () => {
         const { feed, posts } = parser(xml);
         state.form.feedUrls.push(url);
         state.form.feeds.push(feed);
-        state.form.posts.push(posts);
+        state.form.posts.push(...posts);
       })
       .catch((error) => {
         state.form.processState = 'error';
         const { message } = error;
         switch (message) {
           case 'form is empty':
-            state.form.error = i18nextInstance.t('fail.emptyForm');
+            state.form.error = i18nextInstance.t('failMessages.emptyForm');
             break;
           case 'form is invalid':
-            state.form.error = i18nextInstance.t('fail.invalid');
+            state.form.error = i18nextInstance.t('failMessages.invalid');
             break;
           case 'url already exists':
-            state.form.error = i18nextInstance.t('fail.alreadyExists');
+            state.form.error = i18nextInstance.t('failMessages.alreadyExists');
             break;
           case 'Network Error':
-            state.form.error = i18nextInstance.t('fail.networkError');
+            state.form.error = i18nextInstance.t('failMessages.networkError');
             break;
           case 'rss is not found':
-            state.form.error = i18nextInstance.t('fail.notContainRss');
+            state.form.error = i18nextInstance.t('failMessages.notContainRss');
             break;
           default: throw new Error(`Message doesn't exist ${error.message}`);
         }
