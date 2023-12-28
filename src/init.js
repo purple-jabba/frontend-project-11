@@ -14,6 +14,34 @@ const validateUrl = (url, urls) => {
   return schema.validate(url);
 };
 
+const getExistingPostsTitles = (state) => state.form.posts.map((post) => post.title);
+
+const addNewPosts = (existingPostsTitles, state, posts) => {
+  const newPosts = [];
+  posts.forEach((post) => {
+    if (!existingPostsTitles.includes(post.title)) {
+      newPosts.push(post);
+    }
+  });
+  state.form.posts.unshift(...newPosts);
+};
+
+const updatePosts = (state) => {
+  const promises = state.feedUrls.map((url) => axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`)
+    .then((response) => {
+      const existingPostsTitles = getExistingPostsTitles(state);
+      const xml = response.data.contents;
+      const { posts } = parser(xml);
+      addNewPosts(existingPostsTitles, state, posts);
+    }));
+  return Promise.all(promises);
+};
+
+const setUpdateTracker = (state, delay = 5000) => {
+  updatePosts(state)
+    .then(() => setTimeout(setUpdateTracker, delay, state));
+};
+
 export default () => {
   const defaultLanguage = 'ru';
 
@@ -33,9 +61,9 @@ export default () => {
 
   const initialState = {
     lng: defaultLanguage,
+    feedUrls: [],
+    processState: 'initial',
     form: {
-      processState: 'initial',
-      feedUrls: [],
       feeds: [],
       posts: [],
       error: 'none',
@@ -44,17 +72,16 @@ export default () => {
 
   const state = onChange(initialState, (path, value) => {
     switch (path) {
-      case 'form.processState':
+      case 'processState':
         break;
       case 'form.feeds':
-        console.log(value);
         render.userInterfaceFeeds(value, i18nextInstance);
         break;
       case 'form.posts':
-        console.log(value);
         render.userInterfacePosts(value, i18nextInstance);
+        console.log(value);
         break;
-      case 'form.feedUrls':
+      case 'feedUrls':
         render.successNotification(elements.inputForm, elements.feedback, i18nextInstance.t('successMessage'));
         break;
       case 'form.error':
@@ -67,21 +94,22 @@ export default () => {
   elements.form.addEventListener('submit', (event) => {
     event.preventDefault();
     const url = elements.inputForm.value;
-    validateUrl(url, state.form.feedUrls)
+    validateUrl(url, state.feedUrls)
       .then(() => {
-        state.form.processState = 'loading';
+        state.processState = 'loading';
         return axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`);
       })
       .then((response) => {
-        state.form.processState = 'loaded';
+        state.processState = 'loaded';
         const xml = response.data.contents;
         const { feed, posts } = parser(xml);
-        state.form.feedUrls.push(url);
+        state.feedUrls.push(url);
         state.form.feeds.push(feed);
         state.form.posts.push(...posts);
+        setUpdateTracker(state);
       })
       .catch((error) => {
-        state.form.processState = 'error';
+        state.processState = 'error';
         const { message } = error;
         switch (message) {
           case 'form is empty':
