@@ -71,20 +71,18 @@ export const userInterfacePosts = (value, i18nextInstance) => {
     cardDiv.append(listGroup);
   }
   const postsList = posts.querySelector('.list-group');
+  postsList.replaceChildren();
   value.forEach((post) => {
-    const postItemById = postsList.querySelector(`[id='${post.id}']`);
-    if (!postItemById) {
-      const li = document.createElement('li');
-      li.id = post.id;
-      li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
-      const a = document.createElement('a');
-      a.setAttribute('href', post.link);
-      a.classList.add('fw-bold');
-      a.setAttribute('target', '_blank');
-      a.setAttribute('rel', 'noopener noreferrer');
-      a.textContent = post.title;
-      li.append(a);
-      postsList.append(li);
-    }
+    const li = document.createElement('li');
+    li.id = post.id;
+    li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
+    const a = document.createElement('a');
+    a.setAttribute('href', post.link);
+    a.classList.add('fw-bold');
+    a.setAttribute('target', '_blank');
+    a.setAttribute('rel', 'noopener noreferrer');
+    a.textContent = post.title;
+    li.append(a);
+    postsList.append(li);
   });
 };
