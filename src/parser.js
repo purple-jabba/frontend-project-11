@@ -24,7 +24,6 @@ export default (xml) => {
       description: item.querySelector('description').textContent,
       link: item.querySelector('link').textContent,
     };
-
     posts.push(post);
   });
   return { feed, posts };
