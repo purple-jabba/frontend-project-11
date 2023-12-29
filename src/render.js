@@ -1,15 +1,49 @@
 /* eslint no-param-reassign: ["error", { "props": false }] */
+export const submitInterface = (value, form, button, feedback) => {
+  switch (value) {
+    case 'loading':
+      button.classList.add('disabled');
+      feedback.classList.remove('text-success', 'text-danger');
+      feedback.textContent = '';
+      form.classList.remove('is-invalid');
+      break;
+    case 'loaded':
+      button.classList.remove('disabled');
+      break;
+    case 'error':
+      form.classList.add('is-invalid');
+      button.classList.remove('disabled');
+      break;
+    default: throw new Error(`Unexpected state of process ${value}`);
+  }
+};
 
-export const failNotification = (form, feedback, message) => {
-  form.classList.add('is-invalid');
-  feedback.classList.replace('text-success', 'text-danger');
+export const watchedArticles = (value, state) => {
+  const modalTitle = document.querySelector('.modal-title');
+  const modalDescription = document.querySelector('.modal-body');
+  const fullArticleButton = document.querySelector('.full-article');
+  const watchedTrue = value.filter((post) => post.watched === true);
+  watchedTrue.forEach((element) => {
+    const data = state.form.posts.find((postEl) => postEl.id === element.postId);
+    const post = document.querySelector(`li[id='${element.postId}']`);
+    const a = post.querySelector('a');
+    a.classList.remove('fw-bold');
+    a.classList.add('fw-normal', 'link-secondary');
+    modalTitle.textContent = data.title;
+    modalDescription.textContent = data.description;
+    fullArticleButton.setAttribute('href', data.link);
+  });
+};
+
+export const failNotification = (feedback, message) => {
+  feedback.classList.add('text-danger');
   feedback.textContent = message;
 };
 
 export const successNotification = (form, feedback, message) => {
   form.classList.remove('is-invalid');
   form.value = '';
-  feedback.classList.replace('text-danger', 'text-success');
+  feedback.classList.add('text-success');
   feedback.textContent = message;
   form.focus();
 };
@@ -83,6 +117,14 @@ export const userInterfacePosts = (value, i18nextInstance) => {
     a.setAttribute('rel', 'noopener noreferrer');
     a.textContent = post.title;
     li.append(a);
+    const button = document.createElement('button');
+    button.setAttribute('type', 'button');
+    button.classList.add('btn', 'btn-outline-primary', 'btn-sm');
+    button.id = post.id;
+    button.setAttribute('data-bs-toggle', 'modal');
+    button.setAttribute('data-bs-target', '#modal');
+    button.textContent = i18nextInstance.t('watchPost');
+    li.append(button);
     postsList.append(li);
   });
 };
