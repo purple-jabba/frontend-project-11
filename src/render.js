@@ -36,21 +36,23 @@ export const submitInterface = (value, form, button, feedback) => {
   }
 };
 
-export const watchedArticles = (value, state) => {
-  const modalTitle = document.querySelector('.modal-title');
-  const modalDescription = document.querySelector('.modal-body');
-  const fullArticleButton = document.querySelector('.full-article');
+export const watchedArticles = (value) => {
   const watchedTrue = value.filter((post) => post.watched === true);
   watchedTrue.forEach((element) => {
-    const data = state.form.posts.find((postEl) => postEl.id === element.postId);
     const post = document.querySelector(`li[id='${element.postId}']`);
     const a = post.querySelector('a');
     a.classList.remove('fw-bold');
     a.classList.add('fw-normal', 'link-secondary');
-    modalTitle.textContent = data.title;
-    modalDescription.textContent = data.description;
-    fullArticleButton.setAttribute('href', data.link);
   });
+};
+
+export const modal = (value) => {
+  const modalTitle = document.querySelector('.modal-title');
+  const modalDescription = document.querySelector('.modal-body');
+  const fullArticleButton = document.querySelector('.full-article');
+  modalTitle.textContent = value.title;
+  modalDescription.textContent = value.description;
+  fullArticleButton.setAttribute('href', value.link);
 };
 
 export const failNotification = (feedback, message) => {
