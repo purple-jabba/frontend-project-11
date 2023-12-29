@@ -184,7 +184,7 @@ export default () => {
         const { feed, posts } = parser(xml);
         state.feedUrls.push(url);
         state.form.feeds.push(feed);
-        state.form.posts.push(...posts);
+        state.form.posts.unshift(...posts);
         addUiStateForPosts(state, posts);
         addClickEventListener(posts, state);
         setUpdateTracker(state);
