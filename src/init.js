@@ -18,12 +18,22 @@ const validateUrl = (url, urls) => {
 
 const getPostsTitles = (posts) => posts.map((post) => post.title);
 const getPostsIds = (posts) => posts.map((post) => post.id);
+
 const makePostWatched = (state, postId) => {
   state.uiState.postsState.forEach((postState) => {
     if (postState.postId === postId) {
       postState.watched = true;
     }
   });
+};
+
+const addDataToModal = (postId, state) => {
+  const selectedElement = state.form.posts.find((postEl) => postEl.id === postId);
+  state.uiState.modal = {
+    title: selectedElement.title,
+    description: selectedElement.description,
+    link: selectedElement.link,
+  };
 };
 
 const addUiStateForPosts = (state, posts) => {
@@ -52,6 +62,7 @@ const addClickEventListener = (posts, state) => {
     });
     button.addEventListener('click', () => {
       makePostWatched(state, postId);
+      addDataToModal(postId, state);
     });
   });
 };
@@ -124,6 +135,7 @@ export default () => {
     },
     uiState: {
       postsState: [],
+      modal: {},
     },
   };
 
@@ -139,7 +151,10 @@ export default () => {
         render.userInterfacePosts(value, i18nextInstance);
         break;
       case 'uiState.postsState':
-        render.watchedArticles(value, state);
+        render.watchedArticles(value);
+        break;
+      case 'uiState.modal':
+        render.modal(value);
         break;
       case 'feedUrls':
         render.successNotification(elements.inputForm, elements.feedback, i18nextInstance.t('successMessage'));
