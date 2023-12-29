@@ -18,6 +18,13 @@ const validateUrl = (url, urls) => {
 
 const getPostsTitles = (posts) => posts.map((post) => post.title);
 const getPostsIds = (posts) => posts.map((post) => post.id);
+const makePostWatched = (state, postId) => {
+  state.uiState.postsState.forEach((postState) => {
+    if (postState.postId === postId) {
+      postState.watched = true;
+    }
+  });
+};
 
 const addUiStateForPosts = (state, posts) => {
   const result = [];
@@ -41,18 +48,10 @@ const addClickEventListener = (posts, state) => {
     const a = post.querySelector('a');
     const button = post.querySelector('button');
     a.addEventListener('click', () => {
-      state.uiState.postsState.forEach((postState) => {
-        if (postState.postId === postId) {
-          postState.watched = true;
-        }
-      });
+      makePostWatched(state, postId);
     });
     button.addEventListener('click', () => {
-      state.uiState.postsState.forEach((postState) => {
-        if (postState.postId === postId) {
-          postState.watched = true;
-        }
-      });
+      makePostWatched(state, postId);
     });
   });
 };

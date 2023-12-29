@@ -1,4 +1,22 @@
 /* eslint no-param-reassign: ["error", { "props": false }] */
+const checkCard = (card, title, target) => {
+  if (!card) {
+    const cardDiv = document.createElement('div');
+    cardDiv.classList.add('card', 'border-0');
+    target.append(cardDiv);
+    const cardBody = document.createElement('div');
+    cardBody.classList.add('card-body');
+    cardDiv.append(cardBody);
+    const cardTitle = document.createElement('h2');
+    cardTitle.classList.add('card-title', 'h4');
+    cardTitle.textContent = title;
+    cardBody.append(cardTitle);
+    const listGroup = document.createElement('ul');
+    listGroup.classList.add('list-group', 'border-0', 'rounded-0');
+    cardDiv.append(listGroup);
+  }
+};
+
 export const submitInterface = (value, form, button, feedback) => {
   switch (value) {
     case 'loading':
@@ -51,21 +69,7 @@ export const successNotification = (form, feedback, message) => {
 export const userInterfaceFeeds = (value, i18nextInstance) => {
   const feeds = document.querySelector('.feeds');
   const card = feeds.querySelector('.card');
-  if (!card) {
-    const cardDiv = document.createElement('div');
-    cardDiv.classList.add('card', 'border-0');
-    feeds.append(cardDiv);
-    const cardBody = document.createElement('div');
-    cardBody.classList.add('card-body');
-    cardDiv.append(cardBody);
-    const cardTitle = document.createElement('h2');
-    cardTitle.classList.add('card-title', 'h4');
-    cardTitle.textContent = i18nextInstance.t('titles.feeds');
-    cardBody.append(cardTitle);
-    const listGroup = document.createElement('ul');
-    listGroup.classList.add('list-group', 'border-0', 'rounded-0');
-    cardDiv.append(listGroup);
-  }
+  checkCard(card, i18nextInstance.t('titles.feeds'), feeds);
   const feedList = feeds.querySelector('.list-group');
   value.forEach((feed) => {
     const feedItemById = feedList.querySelector(`[id='${feed.id}']`);
@@ -89,21 +93,7 @@ export const userInterfaceFeeds = (value, i18nextInstance) => {
 export const userInterfacePosts = (value, i18nextInstance) => {
   const posts = document.querySelector('.posts');
   const card = posts.querySelector('.card');
-  if (!card) {
-    const cardDiv = document.createElement('div');
-    cardDiv.classList.add('card', 'border-0');
-    posts.append(cardDiv);
-    const cardBody = document.createElement('div');
-    cardBody.classList.add('card-body');
-    cardDiv.append(cardBody);
-    const cardTitle = document.createElement('h2');
-    cardTitle.classList.add('card-title', 'h4');
-    cardTitle.textContent = i18nextInstance.t('titles.posts');
-    cardBody.append(cardTitle);
-    const listGroup = document.createElement('ul');
-    listGroup.classList.add('list-group', 'border-0', 'rounded-0');
-    cardDiv.append(listGroup);
-  }
+  checkCard(card, i18nextInstance.t('titles.posts'), posts);
   const postsList = posts.querySelector('.list-group');
   postsList.replaceChildren();
   value.forEach((post) => {
