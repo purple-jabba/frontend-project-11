@@ -89,6 +89,7 @@ const updatePosts = (state) => {
       const xml = response.data.contents;
       const { posts } = parser(xml);
       addNewPosts(existingPostsTitles, state, posts);
+      addClickEventListener(state.form.posts, state);
     }));
   return Promise.all(promises);
 };
@@ -126,7 +127,6 @@ export default () => {
     lng: defaultLanguage,
     feedUrls: [],
     watchedArticles: [],
-    modalInformation: {},
     processState: 'initial',
     form: {
       feeds: [],
@@ -160,7 +160,6 @@ export default () => {
         render.successNotification(elements.inputForm, elements.feedback, i18nextInstance.t('successMessage'));
         break;
       case 'watchedArticles':
-        console.log(value);
         render.watchedArticles(value);
         break;
       case 'form.error':
