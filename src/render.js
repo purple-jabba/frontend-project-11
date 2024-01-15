@@ -19,13 +19,13 @@ const checkCard = (card, title, target) => {
 
 export const submitInterface = (value, form, button, feedback) => {
   switch (value) {
-    case 'loading':
+    case 'processing':
       button.classList.add('disabled');
       feedback.classList.remove('text-success', 'text-danger');
       feedback.textContent = '';
       form.classList.remove('is-invalid');
       break;
-    case 'loaded':
+    case 'finished':
       button.classList.remove('disabled');
       break;
     case 'error':
@@ -55,9 +55,26 @@ export const modal = (value) => {
   fullArticleButton.setAttribute('href', value.link);
 };
 
-export const failNotification = (feedback, message) => {
+export const failNotification = (feedback, error, i18nextInstance) => {
   feedback.classList.add('text-danger');
-  feedback.textContent = message;
+  switch (error.message) {
+    case 'form is empty':
+      feedback.textContent = i18nextInstance.t('failMessages.emptyForm');
+      break;
+    case 'form is invalid':
+      feedback.textContent = i18nextInstance.t('failMessages.invalid');
+      break;
+    case 'url already exists':
+      feedback.textContent = i18nextInstance.t('failMessages.alreadyExists');
+      break;
+    case 'Network Error':
+      feedback.textContent = i18nextInstance.t('failMessages.networkError');
+      break;
+    case 'rss is not found':
+      feedback.textContent = i18nextInstance.t('failMessages.notContainRss');
+      break;
+    default: throw new Error(`Message doesn't exist ${error.message}`);
+  }
 };
 
 export const successNotification = (form, feedback, message) => {

@@ -5,6 +5,7 @@ export default (xml) => {
   const checkError = parsedRss.querySelector('parsererror');
   if (checkError) {
     const error = new Error('rss is not found');
+    error.name = 'ParseError';
     throw error;
   }
 

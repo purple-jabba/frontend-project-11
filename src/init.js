@@ -102,13 +102,6 @@ const setUpdateTracker = (state, delay = 5000) => {
 export default () => {
   const defaultLanguage = 'ru';
 
-  const i18nextInstance = i18next.createInstance();
-  i18nextInstance.init({
-    lng: defaultLanguage,
-    debug: true,
-    resources,
-  });
-
   const elements = {
     form: document.querySelector('.rss-form'),
     buttonForm: document.querySelector('.btn-lg'),
@@ -127,7 +120,8 @@ export default () => {
     lng: defaultLanguage,
     feedUrls: [],
     watchedArticles: [],
-    processState: 'initial',
+    validationState: 'initial',
+    feedAdditionState: 'initial',
     form: {
       feeds: [],
       posts: [],
@@ -139,76 +133,82 @@ export default () => {
     },
   };
 
-  const state = onChange(initialState, (path, value) => {
-    switch (path) {
-      case 'processState':
-        render.submitInterface(value, elements.inputForm, elements.buttonForm, elements.feedback);
-        break;
-      case 'form.feeds':
-        render.userInterfaceFeeds(value, i18nextInstance);
-        break;
-      case 'form.posts':
-        render.userInterfacePosts(value, i18nextInstance);
-        break;
-      case 'uiState.postsState':
-        render.watchedArticles(value);
-        break;
-      case 'uiState.modal':
-        render.modal(value);
-        break;
-      case 'feedUrls':
-        render.successNotification(elements.inputForm, elements.feedback, i18nextInstance.t('successMessage'));
-        break;
-      case 'watchedArticles':
-        render.watchedArticles(value);
-        break;
-      case 'form.error':
-        render.failNotification(elements.feedback, value);
-        break;
-      default: throw new Error(`Path doesn't exist ${path}`);
-    }
-  });
+  const i18nextInstance = i18next.createInstance();
+  i18nextInstance.init({
+    lng: defaultLanguage,
+    debug: true,
+    resources,
+  }).then(() => {
+    const state = onChange(initialState, (path, value) => {
+      switch (path) {
+        case 'validationState':
+          render.submitInterface(value, elements.inputForm, elements.buttonForm, elements.feedback);
+          break;
+        case 'feedAdditionState':
+          render.submitInterface(value, elements.inputForm, elements.buttonForm, elements.feedback);
+          break;
+        case 'form.feeds':
+          render.userInterfaceFeeds(value, i18nextInstance);
+          break;
+        case 'form.posts':
+          render.userInterfacePosts(value, i18nextInstance);
+          break;
+        case 'uiState.postsState':
+          render.watchedArticles(value);
+          break;
+        case 'uiState.modal':
+          render.modal(value);
+          break;
+        case 'feedUrls':
+          render.successNotification(elements.inputForm, elements.feedback, i18nextInstance.t('successMessage'));
+          break;
+        case 'watchedArticles':
+          render.watchedArticles(value);
+          break;
+        case 'form.error':
+          render.failNotification(elements.feedback, value, i18nextInstance);
+          break;
+        default: throw new Error(`Path doesn't exist ${path}`);
+      }
+    });
 
-  elements.form.addEventListener('submit', (event) => {
-    event.preventDefault();
-    const url = elements.inputForm.value;
-    validateUrl(url, state.feedUrls)
-      .then(() => {
-        state.processState = 'loading';
-        return axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`);
-      })
-      .then((response) => {
-        state.processState = 'loaded';
-        const xml = response.data.contents;
-        const { feed, posts } = parser(xml);
-        state.feedUrls.push(url);
-        state.form.feeds.push(feed);
-        state.form.posts.unshift(...posts);
-        addUiStateForPosts(state, posts);
-        addClickEventListener(posts, state);
-        setUpdateTracker(state);
-      })
-      .catch((error) => {
-        state.processState = 'error';
-        const { message } = error;
-        switch (message) {
-          case 'form is empty':
-            state.form.error = i18nextInstance.t('failMessages.emptyForm');
-            break;
-          case 'form is invalid':
-            state.form.error = i18nextInstance.t('failMessages.invalid');
-            break;
-          case 'url already exists':
-            state.form.error = i18nextInstance.t('failMessages.alreadyExists');
-            break;
-          case 'Network Error':
-            state.form.error = i18nextInstance.t('failMessages.networkError');
-            break;
-          case 'rss is not found':
-            state.form.error = i18nextInstance.t('failMessages.notContainRss');
-            break;
-          default: throw new Error(`Message doesn't exist ${error.message}`);
-        }
-      });
+    elements.form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const url = elements.inputForm.value;
+      state.validationState = 'processing';
+      validateUrl(url, state.feedUrls)
+        .then(() => {
+          state.validationState = 'finished';
+          state.feedAdditionState = 'processing';
+          return axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`);
+        })
+        .then((response) => {
+          state.feedAdditionState = 'finished';
+          const xml = response.data.contents;
+          const { feed, posts } = parser(xml);
+          state.feedUrls.push(url.trim());
+          state.form.feeds.push(feed);
+          state.form.posts.unshift(...posts);
+          addUiStateForPosts(state, posts);
+          addClickEventListener(posts, state);
+          setUpdateTracker(state);
+        })
+        .catch((error) => {
+          const { name } = error;
+          switch (name) {
+            case 'ValidationError':
+              state.validationState = 'error';
+              break;
+            case 'ParseError':
+              state.feedAdditionState = 'error';
+              break;
+            case 'AxiosError':
+              state.feedAdditionState = 'error';
+              break;
+            default: throw new Error(`Name doesn't exist ${name}`);
+          }
+          state.form.error = error;
+        });
+    });
   });
 };
