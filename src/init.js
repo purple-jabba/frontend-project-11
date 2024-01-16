@@ -16,12 +16,20 @@ const validateUrl = (url, urls) => {
   return schema.validate(url);
 };
 
-const createIds = (items) => {
+const createIdsForPosts = (items) => {
   items.forEach((item) => {
     const itemId = uniqueId();
     item.id = itemId;
   });
 };
+
+const getProxyForUrl = (url) => {
+  const proxyUrl = new URL('/get', 'https://allorigins.hexlet.app');
+  proxyUrl.searchParams.set('disableCache', 'true');
+  proxyUrl.searchParams.set('url', url);
+  return proxyUrl.toString();
+};
+
 const getPostsTitles = (posts) => posts.map((post) => post.title);
 const getPostsIds = (posts) => posts.map((post) => post.id);
 
@@ -89,12 +97,12 @@ const addNewPosts = (existingPostsTitles, state, posts) => {
 };
 
 const updatePosts = (state) => {
-  const promises = state.uiState.feeds.urls.map((url) => axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`)
+  const promises = state.uiState.feeds.urls.map((url) => axios.get(getProxyForUrl(url))
     .then((response) => {
       const existingPostsTitles = getPostsTitles(state.uiState.posts);
       const xml = response.data.contents;
       const { posts } = parser(xml);
-      createIds(posts);
+      createIdsForPosts(posts);
       addNewPosts(existingPostsTitles, state, posts);
       addClickEventListener(state.uiState.posts, state);
     }));
@@ -185,7 +193,7 @@ export default () => {
         .then(() => {
           state.form.validationState = 'finished';
           state.form.feedAdditionState = 'processing';
-          return axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`);
+          return axios.get(getProxyForUrl(url));
         })
         .then((response) => {
           state.form.feedAdditionState = 'finished';
@@ -193,7 +201,7 @@ export default () => {
           const { feed, posts } = parser(xml);
           const feedId = uniqueId();
           feed.id = feedId;
-          createIds(posts);
+          createIdsForPosts(posts);
           console.log(feed);
           state.uiState.feeds.urls.push(url.trim());
           state.uiState.feeds.data.push(feed);
