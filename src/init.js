@@ -28,7 +28,7 @@ const makePostWatched = (state, postId) => {
 };
 
 const addDataToModal = (postId, state) => {
-  const selectedElement = state.form.posts.find((postEl) => postEl.id === postId);
+  const selectedElement = state.uiState.posts.find((postEl) => postEl.id === postId);
   state.uiState.modal = {
     title: selectedElement.title,
     description: selectedElement.description,
@@ -77,19 +77,19 @@ const addNewPosts = (existingPostsTitles, state, posts) => {
   if (isEmpty(newPosts)) {
     return;
   }
-  state.form.posts.unshift(...newPosts);
+  state.uiState.posts.unshift(...newPosts);
   addUiStateForPosts(state, newPosts);
   addClickEventListener(newPosts, state);
 };
 
 const updatePosts = (state) => {
-  const promises = state.feedUrls.map((url) => axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`)
+  const promises = state.uiState.feeds.urls.map((url) => axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`)
     .then((response) => {
-      const existingPostsTitles = getPostsTitles(state.form.posts);
+      const existingPostsTitles = getPostsTitles(state.uiState.posts);
       const xml = response.data.contents;
       const { posts } = parser(xml);
       addNewPosts(existingPostsTitles, state, posts);
-      addClickEventListener(state.form.posts, state);
+      addClickEventListener(state.uiState.posts, state);
     }));
   return Promise.all(promises);
 };
@@ -118,16 +118,17 @@ export default () => {
 
   const initialState = {
     lng: defaultLanguage,
-    feedUrls: [],
-    watchedArticles: [],
-    validationState: 'initial',
-    feedAdditionState: 'initial',
     form: {
-      feeds: [],
-      posts: [],
+      validationState: 'initial',
+      feedAdditionState: 'initial',
       error: 'none',
     },
     uiState: {
+      feeds: {
+        data: [],
+        urls: [],
+      },
+      posts: [],
       postsState: [],
       modal: {},
     },
@@ -141,16 +142,16 @@ export default () => {
   }).then(() => {
     const state = onChange(initialState, (path, value) => {
       switch (path) {
-        case 'validationState':
+        case 'form.validationState':
           render.submitInterface(value, elements.inputForm, elements.buttonForm, elements.feedback);
           break;
-        case 'feedAdditionState':
+        case 'form.feedAdditionState':
           render.submitInterface(value, elements.inputForm, elements.buttonForm, elements.feedback);
           break;
-        case 'form.feeds':
+        case 'uiState.feeds.data':
           render.userInterfaceFeeds(value, i18nextInstance);
           break;
-        case 'form.posts':
+        case 'uiState.posts':
           render.userInterfacePosts(value, i18nextInstance);
           break;
         case 'uiState.postsState':
@@ -159,11 +160,8 @@ export default () => {
         case 'uiState.modal':
           render.modal(value);
           break;
-        case 'feedUrls':
+        case 'uiState.feeds.urls':
           render.successNotification(elements.inputForm, elements.feedback, i18nextInstance.t('successMessage'));
-          break;
-        case 'watchedArticles':
-          render.watchedArticles(value);
           break;
         case 'form.error':
           render.failNotification(elements.feedback, value, i18nextInstance);
@@ -175,20 +173,20 @@ export default () => {
     elements.form.addEventListener('submit', (event) => {
       event.preventDefault();
       const url = elements.inputForm.value;
-      state.validationState = 'processing';
-      validateUrl(url, state.feedUrls)
+      state.form.validationState = 'processing';
+      validateUrl(url, state.uiState.feeds.urls)
         .then(() => {
-          state.validationState = 'finished';
-          state.feedAdditionState = 'processing';
+          state.form.validationState = 'finished';
+          state.form.feedAdditionState = 'processing';
           return axios.get(`https://allorigins.hexlet.app/get?disableCache=true&url=${encodeURIComponent(url)}`);
         })
         .then((response) => {
-          state.feedAdditionState = 'finished';
+          state.form.feedAdditionState = 'finished';
           const xml = response.data.contents;
           const { feed, posts } = parser(xml);
-          state.feedUrls.push(url.trim());
-          state.form.feeds.push(feed);
-          state.form.posts.unshift(...posts);
+          state.uiState.feeds.urls.push(url.trim());
+          state.uiState.feeds.data.push(feed);
+          state.uiState.posts.unshift(...posts);
           addUiStateForPosts(state, posts);
           addClickEventListener(posts, state);
           setUpdateTracker(state);
@@ -197,15 +195,15 @@ export default () => {
           const { name } = error;
           switch (name) {
             case 'ValidationError':
-              state.validationState = 'error';
+              state.form.validationState = 'error';
               break;
             case 'ParseError':
-              state.feedAdditionState = 'error';
+              state.form.feedAdditionState = 'error';
               break;
             case 'AxiosError':
-              state.feedAdditionState = 'error';
+              state.form.feedAdditionState = 'error';
               break;
-            default: throw new Error(`Name doesn't exist ${name}`);
+            default: throw new Error(`Name doesn't exist ${error}`);
           }
           state.form.error = error;
         });
