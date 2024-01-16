@@ -3,7 +3,7 @@ import onChange from 'on-change';
 import * as yup from 'yup';
 import i18next from 'i18next';
 import axios from 'axios';
-import { isEmpty } from 'lodash';
+import { isEmpty, uniqueId } from 'lodash';
 import resources from './locales/index.js';
 import * as render from './render.js';
 import parser from './parser.js';
@@ -16,6 +16,12 @@ const validateUrl = (url, urls) => {
   return schema.validate(url);
 };
 
+const createIds = (items) => {
+  items.forEach((item) => {
+    const itemId = uniqueId();
+    item.id = itemId;
+  });
+};
 const getPostsTitles = (posts) => posts.map((post) => post.title);
 const getPostsIds = (posts) => posts.map((post) => post.id);
 
@@ -88,6 +94,7 @@ const updatePosts = (state) => {
       const existingPostsTitles = getPostsTitles(state.uiState.posts);
       const xml = response.data.contents;
       const { posts } = parser(xml);
+      createIds(posts);
       addNewPosts(existingPostsTitles, state, posts);
       addClickEventListener(state.uiState.posts, state);
     }));
@@ -184,6 +191,10 @@ export default () => {
           state.form.feedAdditionState = 'finished';
           const xml = response.data.contents;
           const { feed, posts } = parser(xml);
+          const feedId = uniqueId();
+          feed.id = feedId;
+          createIds(posts);
+          console.log(feed);
           state.uiState.feeds.urls.push(url.trim());
           state.uiState.feeds.data.push(feed);
           state.uiState.posts.unshift(...posts);
