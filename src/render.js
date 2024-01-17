@@ -17,7 +17,7 @@ const checkCard = (card, title, target) => {
   }
 };
 
-const submitInterface = (value, form, button, feedback) => {
+const renderSubmitInterface = (value, form, button, feedback) => {
   switch (value) {
     case 'processing':
       button.classList.add('disabled');
@@ -36,17 +36,16 @@ const submitInterface = (value, form, button, feedback) => {
   }
 };
 
-const watchedArticles = (value) => {
+const renderWatchedArticles = (value) => {
   const watchedTrue = value.filter((post) => post.watched === true);
   watchedTrue.forEach((element) => {
-    const post = document.querySelector(`li[id='${element.postId}']`);
-    const a = post.querySelector('a');
+    const a = document.querySelector(`a[id='${element.postId}']`);
     a.classList.remove('fw-bold');
     a.classList.add('fw-normal', 'link-secondary');
   });
 };
 
-const modal = (value) => {
+const renderModal = (value) => {
   const modalTitle = document.querySelector('.modal-title');
   const modalDescription = document.querySelector('.modal-body');
   const fullArticleButton = document.querySelector('.full-article');
@@ -55,7 +54,7 @@ const modal = (value) => {
   fullArticleButton.setAttribute('href', value.link);
 };
 
-const failNotification = (feedback, error, i18nextInstance) => {
+const renderFailNotification = (feedback, error, i18nextInstance) => {
   feedback.classList.add('text-danger');
   switch (error.message) {
     case 'form is empty':
@@ -77,7 +76,7 @@ const failNotification = (feedback, error, i18nextInstance) => {
   }
 };
 
-const successNotification = (form, feedback, message) => {
+const renderSuccessNotification = (form, feedback, message) => {
   form.classList.remove('is-invalid');
   form.value = '';
   feedback.classList.add('text-success');
@@ -85,7 +84,7 @@ const successNotification = (form, feedback, message) => {
   form.focus();
 };
 
-const userInterfaceFeeds = (value, i18nextInstance) => {
+const renderUserInterfaceFeeds = (value, i18nextInstance) => {
   const feeds = document.querySelector('.feeds');
   const card = feeds.querySelector('.card');
   checkCard(card, i18nextInstance.t('titles.feeds'), feeds);
@@ -109,7 +108,7 @@ const userInterfaceFeeds = (value, i18nextInstance) => {
   });
 };
 
-const userInterfacePosts = (value, i18nextInstance) => {
+const renderUserInterfacePosts = (value, i18nextInstance) => {
   const posts = document.querySelector('.posts');
   const card = posts.querySelector('.card');
   checkCard(card, i18nextInstance.t('titles.posts'), posts);
@@ -117,9 +116,9 @@ const userInterfacePosts = (value, i18nextInstance) => {
   postsList.replaceChildren();
   value.forEach((post) => {
     const li = document.createElement('li');
-    li.id = post.id;
     li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
     const a = document.createElement('a');
+    a.id = post.id;
     a.setAttribute('href', post.link);
     a.classList.add('fw-bold');
     a.setAttribute('target', '_blank');
@@ -127,6 +126,7 @@ const userInterfacePosts = (value, i18nextInstance) => {
     a.textContent = post.title;
     li.append(a);
     const button = document.createElement('button');
+    button.id = post.id;
     button.setAttribute('type', 'button');
     button.classList.add('btn', 'btn-outline-primary', 'btn-sm');
     button.id = post.id;
@@ -141,28 +141,28 @@ const userInterfacePosts = (value, i18nextInstance) => {
 export default (elements, i18nextInstance) => (path, value) => {
   switch (path) {
     case 'form.validationState':
-      submitInterface(value, elements.inputForm, elements.buttonForm, elements.feedback);
+      renderSubmitInterface(value, elements.inputForm, elements.buttonForm, elements.feedback);
       break;
     case 'form.feedAdditionState':
-      submitInterface(value, elements.inputForm, elements.buttonForm, elements.feedback);
+      renderSubmitInterface(value, elements.inputForm, elements.buttonForm, elements.feedback);
       break;
     case 'uiState.feeds.data':
-      userInterfaceFeeds(value, i18nextInstance);
+      renderUserInterfaceFeeds(value, i18nextInstance);
       break;
     case 'uiState.posts':
-      userInterfacePosts(value, i18nextInstance);
+      renderUserInterfacePosts(value, i18nextInstance);
       break;
     case 'uiState.postsState':
-      watchedArticles(value);
+      renderWatchedArticles(value);
       break;
     case 'uiState.modal':
-      modal(value);
+      renderModal(value);
       break;
     case 'uiState.feeds.urls':
-      successNotification(elements.inputForm, elements.feedback, i18nextInstance.t('successMessage'));
+      renderSuccessNotification(elements.inputForm, elements.feedback, i18nextInstance.t('successMessage'));
       break;
     case 'form.error':
-      failNotification(elements.feedback, value, i18nextInstance);
+      renderFailNotification(elements.feedback, value, i18nextInstance);
       break;
     default: throw new Error(`Path doesn't exist ${path}`);
   }

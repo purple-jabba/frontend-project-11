@@ -16,13 +16,6 @@ const validateUrl = (url, urls) => {
   return schema.validate(url);
 };
 
-const createIdsForPosts = (items) => {
-  items.forEach((item) => {
-    const itemId = uniqueId();
-    item.id = itemId;
-  });
-};
-
 const getProxyForUrl = (url) => {
   const proxyUrl = new URL('/get', 'https://allorigins.hexlet.app');
   proxyUrl.searchParams.set('disableCache', 'true');
@@ -31,6 +24,13 @@ const getProxyForUrl = (url) => {
 };
 
 const getPostsTitles = (posts) => posts.map((post) => post.title);
+
+const createIdsForPosts = (items) => {
+  items.forEach((item) => {
+    const itemId = uniqueId();
+    item.id = itemId;
+  });
+};
 const getPostsIds = (posts) => posts.map((post) => post.id);
 
 const makePostWatched = (state, postId) => {
@@ -65,22 +65,6 @@ const addUiStateForPosts = (state, posts) => {
   state.uiState.postsState.push(...result);
 };
 
-const addClickEventListener = (posts, state) => {
-  const postsIds = getPostsIds(posts);
-  postsIds.forEach((postId) => {
-    const post = document.querySelector(`li[id='${postId}']`);
-    const a = post.querySelector('a');
-    const button = post.querySelector('button');
-    a.addEventListener('click', () => {
-      makePostWatched(state, postId);
-    });
-    button.addEventListener('click', () => {
-      makePostWatched(state, postId);
-      addDataToModal(postId, state);
-    });
-  });
-};
-
 const addNewPosts = (existingPostsTitles, state, posts) => {
   const newPosts = [];
   posts.forEach((post) => {
@@ -93,7 +77,6 @@ const addNewPosts = (existingPostsTitles, state, posts) => {
   }
   state.uiState.posts.unshift(...newPosts);
   addUiStateForPosts(state, newPosts);
-  addClickEventListener(newPosts, state);
 };
 
 const updatePosts = (state) => {
@@ -104,7 +87,6 @@ const updatePosts = (state) => {
       const { posts } = parser(xml);
       createIdsForPosts(posts);
       addNewPosts(existingPostsTitles, state, posts);
-      addClickEventListener(state.uiState.posts, state);
     }));
   return Promise.all(promises);
 };
@@ -122,7 +104,7 @@ export default () => {
     buttonForm: document.querySelector('.btn-lg'),
     inputForm: document.querySelector('#url-input'),
     feedback: document.querySelector('.feedback'),
-    posts: document.querySelectorAll('.list-group-item'),
+    posts: document.querySelector('.posts'),
     modal: {
       content: document.querySelector('.modal-content'),
       title: document.querySelector('.modal-title'),
@@ -178,7 +160,6 @@ export default () => {
           state.uiState.feeds.data.push(feed);
           state.uiState.posts.unshift(...posts);
           addUiStateForPosts(state, posts);
-          addClickEventListener(posts, state);
           setUpdateTracker(state);
         })
         .catch((error) => {
@@ -197,6 +178,14 @@ export default () => {
           }
           state.form.error = error;
         });
+    });
+
+    elements.posts.addEventListener('click', (event) => {
+      const postId = event.target.id;
+      if (postId) {
+        makePostWatched(state, postId);
+        addDataToModal(postId, state);
+      }
     });
   });
 };
