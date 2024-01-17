@@ -160,7 +160,6 @@ export default () => {
           state.uiState.feeds.data.push(feed);
           state.uiState.posts.unshift(...posts);
           addUiStateForPosts(state, posts);
-          setUpdateTracker(state);
         })
         .catch((error) => {
           const { name } = error;
@@ -187,5 +186,7 @@ export default () => {
         addDataToModal(postId, state);
       }
     });
+
+    setUpdateTracker(state);
   });
 };
