@@ -5,7 +5,7 @@ import i18next from 'i18next';
 import axios from 'axios';
 import { isEmpty, uniqueId } from 'lodash';
 import resources from './locales/index.js';
-import * as render from './render.js';
+import render from './render.js';
 import parser from './parser.js';
 
 const validateUrl = (url, urls) => {
@@ -155,35 +155,7 @@ export default () => {
     debug: true,
     resources,
   }).then(() => {
-    const state = onChange(initialState, (path, value) => {
-      switch (path) {
-        case 'form.validationState':
-          render.submitInterface(value, elements.inputForm, elements.buttonForm, elements.feedback);
-          break;
-        case 'form.feedAdditionState':
-          render.submitInterface(value, elements.inputForm, elements.buttonForm, elements.feedback);
-          break;
-        case 'uiState.feeds.data':
-          render.userInterfaceFeeds(value, i18nextInstance);
-          break;
-        case 'uiState.posts':
-          render.userInterfacePosts(value, i18nextInstance);
-          break;
-        case 'uiState.postsState':
-          render.watchedArticles(value);
-          break;
-        case 'uiState.modal':
-          render.modal(value);
-          break;
-        case 'uiState.feeds.urls':
-          render.successNotification(elements.inputForm, elements.feedback, i18nextInstance.t('successMessage'));
-          break;
-        case 'form.error':
-          render.failNotification(elements.feedback, value, i18nextInstance);
-          break;
-        default: throw new Error(`Path doesn't exist ${path}`);
-      }
-    });
+    const state = onChange(initialState, render(elements, i18nextInstance));
 
     elements.form.addEventListener('submit', (event) => {
       event.preventDefault();
@@ -202,7 +174,6 @@ export default () => {
           const feedId = uniqueId();
           feed.id = feedId;
           createIdsForPosts(posts);
-          console.log(feed);
           state.uiState.feeds.urls.push(url.trim());
           state.uiState.feeds.data.push(feed);
           state.uiState.posts.unshift(...posts);

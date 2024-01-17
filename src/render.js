@@ -17,7 +17,7 @@ const checkCard = (card, title, target) => {
   }
 };
 
-export const submitInterface = (value, form, button, feedback) => {
+const submitInterface = (value, form, button, feedback) => {
   switch (value) {
     case 'processing':
       button.classList.add('disabled');
@@ -36,7 +36,7 @@ export const submitInterface = (value, form, button, feedback) => {
   }
 };
 
-export const watchedArticles = (value) => {
+const watchedArticles = (value) => {
   const watchedTrue = value.filter((post) => post.watched === true);
   watchedTrue.forEach((element) => {
     const post = document.querySelector(`li[id='${element.postId}']`);
@@ -46,7 +46,7 @@ export const watchedArticles = (value) => {
   });
 };
 
-export const modal = (value) => {
+const modal = (value) => {
   const modalTitle = document.querySelector('.modal-title');
   const modalDescription = document.querySelector('.modal-body');
   const fullArticleButton = document.querySelector('.full-article');
@@ -55,7 +55,7 @@ export const modal = (value) => {
   fullArticleButton.setAttribute('href', value.link);
 };
 
-export const failNotification = (feedback, error, i18nextInstance) => {
+const failNotification = (feedback, error, i18nextInstance) => {
   feedback.classList.add('text-danger');
   switch (error.message) {
     case 'form is empty':
@@ -77,7 +77,7 @@ export const failNotification = (feedback, error, i18nextInstance) => {
   }
 };
 
-export const successNotification = (form, feedback, message) => {
+const successNotification = (form, feedback, message) => {
   form.classList.remove('is-invalid');
   form.value = '';
   feedback.classList.add('text-success');
@@ -85,7 +85,7 @@ export const successNotification = (form, feedback, message) => {
   form.focus();
 };
 
-export const userInterfaceFeeds = (value, i18nextInstance) => {
+const userInterfaceFeeds = (value, i18nextInstance) => {
   const feeds = document.querySelector('.feeds');
   const card = feeds.querySelector('.card');
   checkCard(card, i18nextInstance.t('titles.feeds'), feeds);
@@ -109,7 +109,7 @@ export const userInterfaceFeeds = (value, i18nextInstance) => {
   });
 };
 
-export const userInterfacePosts = (value, i18nextInstance) => {
+const userInterfacePosts = (value, i18nextInstance) => {
   const posts = document.querySelector('.posts');
   const card = posts.querySelector('.card');
   checkCard(card, i18nextInstance.t('titles.posts'), posts);
@@ -136,4 +136,34 @@ export const userInterfacePosts = (value, i18nextInstance) => {
     li.append(button);
     postsList.append(li);
   });
+};
+
+export default (elements, i18nextInstance) => (path, value) => {
+  switch (path) {
+    case 'form.validationState':
+      submitInterface(value, elements.inputForm, elements.buttonForm, elements.feedback);
+      break;
+    case 'form.feedAdditionState':
+      submitInterface(value, elements.inputForm, elements.buttonForm, elements.feedback);
+      break;
+    case 'uiState.feeds.data':
+      userInterfaceFeeds(value, i18nextInstance);
+      break;
+    case 'uiState.posts':
+      userInterfacePosts(value, i18nextInstance);
+      break;
+    case 'uiState.postsState':
+      watchedArticles(value);
+      break;
+    case 'uiState.modal':
+      modal(value);
+      break;
+    case 'uiState.feeds.urls':
+      successNotification(elements.inputForm, elements.feedback, i18nextInstance.t('successMessage'));
+      break;
+    case 'form.error':
+      failNotification(elements.feedback, value, i18nextInstance);
+      break;
+    default: throw new Error(`Path doesn't exist ${path}`);
+  }
 };
