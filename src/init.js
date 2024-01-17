@@ -31,38 +31,14 @@ const createIdsForPosts = (items) => {
     item.id = itemId;
   });
 };
-const getPostsIds = (posts) => posts.map((post) => post.id);
-
-const makePostWatched = (state, postId) => {
-  state.uiState.postsState.forEach((postState) => {
-    if (postState.postId === postId) {
-      postState.watched = true;
-    }
-  });
-};
 
 const addDataToModal = (postId, state) => {
-  const selectedElement = state.uiState.posts.find((postEl) => postEl.id === postId);
+  const selectedElement = state.uiState.posts.data.find((postEl) => postEl.id === postId);
   state.uiState.modal = {
     title: selectedElement.title,
     description: selectedElement.description,
     link: selectedElement.link,
   };
-};
-
-const addUiStateForPosts = (state, posts) => {
-  const result = [];
-  const postsIds = getPostsIds(posts);
-  const existingIds = getPostsIds(state.uiState.postsState);
-  postsIds.forEach((postId) => {
-    if (!existingIds.includes(postId)) {
-      result.push({ postId, watched: false });
-    }
-  });
-  if (isEmpty(result)) {
-    return;
-  }
-  state.uiState.postsState.push(...result);
 };
 
 const addNewPosts = (existingPostsTitles, state, posts) => {
@@ -75,14 +51,13 @@ const addNewPosts = (existingPostsTitles, state, posts) => {
   if (isEmpty(newPosts)) {
     return;
   }
-  state.uiState.posts.unshift(...newPosts);
-  addUiStateForPosts(state, newPosts);
+  state.uiState.posts.data.unshift(...newPosts);
 };
 
 const updatePosts = (state) => {
   const promises = state.uiState.feeds.urls.map((url) => axios.get(getProxyForUrl(url))
     .then((response) => {
-      const existingPostsTitles = getPostsTitles(state.uiState.posts);
+      const existingPostsTitles = getPostsTitles(state.uiState.posts.data);
       const xml = response.data.contents;
       const { posts } = parser(xml);
       createIdsForPosts(posts);
@@ -125,7 +100,10 @@ export default () => {
         data: [],
         urls: [],
       },
-      posts: [],
+      posts: {
+        data: [],
+        watchedPostsIds: [],
+      },
       postsState: [],
       modal: {},
     },
@@ -137,7 +115,7 @@ export default () => {
     debug: true,
     resources,
   }).then(() => {
-    const state = onChange(initialState, render(elements, i18nextInstance));
+    const state = onChange(initialState, render(initialState, elements, i18nextInstance));
 
     elements.form.addEventListener('submit', (event) => {
       event.preventDefault();
@@ -158,8 +136,7 @@ export default () => {
           createIdsForPosts(posts);
           state.uiState.feeds.urls.push(url.trim());
           state.uiState.feeds.data.push(feed);
-          state.uiState.posts.unshift(...posts);
-          addUiStateForPosts(state, posts);
+          state.uiState.posts.data.unshift(...posts);
         })
         .catch((error) => {
           const { name } = error;
@@ -182,7 +159,9 @@ export default () => {
     elements.posts.addEventListener('click', (event) => {
       const postId = event.target.id;
       if (postId) {
-        makePostWatched(state, postId);
+        if (!state.uiState.posts.watchedPostsIds.includes(postId)) {
+          state.uiState.posts.watchedPostsIds.push(postId);
+        }
         addDataToModal(postId, state);
       }
     });

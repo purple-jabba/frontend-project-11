@@ -37,9 +37,8 @@ const renderSubmitInterface = (value, form, button, feedback) => {
 };
 
 const renderWatchedArticles = (value) => {
-  const watchedTrue = value.filter((post) => post.watched === true);
-  watchedTrue.forEach((element) => {
-    const a = document.querySelector(`a[id='${element.postId}']`);
+  value.forEach((id) => {
+    const a = document.querySelector(`a[id='${id}']`);
     a.classList.remove('fw-bold');
     a.classList.add('fw-normal', 'link-secondary');
   });
@@ -108,7 +107,7 @@ const renderUserInterfaceFeeds = (value, i18nextInstance) => {
   });
 };
 
-const renderUserInterfacePosts = (value, i18nextInstance) => {
+const renderUserInterfacePosts = (state, value, i18nextInstance) => {
   const posts = document.querySelector('.posts');
   const card = posts.querySelector('.card');
   checkCard(card, i18nextInstance.t('titles.posts'), posts);
@@ -119,8 +118,12 @@ const renderUserInterfacePosts = (value, i18nextInstance) => {
     li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
     const a = document.createElement('a');
     a.id = post.id;
+    if (!state.uiState.posts.watchedPostsIds.includes(post.id)) {
+      a.classList.add('fw-bold');
+    } else {
+      a.classList.add('fw-normal', 'link-secondary');
+    }
     a.setAttribute('href', post.link);
-    a.classList.add('fw-bold');
     a.setAttribute('target', '_blank');
     a.setAttribute('rel', 'noopener noreferrer');
     a.textContent = post.title;
@@ -138,7 +141,7 @@ const renderUserInterfacePosts = (value, i18nextInstance) => {
   });
 };
 
-export default (elements, i18nextInstance) => (path, value) => {
+export default (state, elements, i18nextInstance) => (path, value) => {
   switch (path) {
     case 'form.validationState':
       renderSubmitInterface(value, elements.inputForm, elements.buttonForm, elements.feedback);
@@ -149,10 +152,10 @@ export default (elements, i18nextInstance) => (path, value) => {
     case 'uiState.feeds.data':
       renderUserInterfaceFeeds(value, i18nextInstance);
       break;
-    case 'uiState.posts':
-      renderUserInterfacePosts(value, i18nextInstance);
+    case 'uiState.posts.data':
+      renderUserInterfacePosts(state, value, i18nextInstance);
       break;
-    case 'uiState.postsState':
+    case 'uiState.posts.watchedPostsIds':
       renderWatchedArticles(value);
       break;
     case 'uiState.modal':
