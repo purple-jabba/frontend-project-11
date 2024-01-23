@@ -3,7 +3,7 @@ import onChange from 'on-change';
 import * as yup from 'yup';
 import i18next from 'i18next';
 import axios from 'axios';
-import { isEmpty, uniqueId } from 'lodash';
+import { uniqueId } from 'lodash';
 import resources from './locales/index.js';
 import render from './render.js';
 import parser from './parser.js';
@@ -15,6 +15,8 @@ const validateUrl = (url, urls) => {
     .notOneOf(urls, 'url already exists');
   return schema.validate(url);
 };
+
+const getUrls = (coll) => coll.map((item) => item.url);
 
 const getProxyForUrl = (url) => {
   const proxyUrl = new URL('/get', 'https://allorigins.hexlet.app');
@@ -32,15 +34,6 @@ const createIdsForPosts = (items) => {
   });
 };
 
-const addDataToModal = (postId, state) => {
-  const selectedElement = state.uiState.posts.data.find((postEl) => postEl.id === postId);
-  state.uiState.modal = {
-    title: selectedElement.title,
-    description: selectedElement.description,
-    link: selectedElement.link,
-  };
-};
-
 const addNewPosts = (existingPostsTitles, state, posts) => {
   const newPosts = [];
   posts.forEach((post) => {
@@ -48,14 +41,12 @@ const addNewPosts = (existingPostsTitles, state, posts) => {
       newPosts.push(post);
     }
   });
-  if (isEmpty(newPosts)) {
-    return;
-  }
   state.uiState.posts.data.unshift(...newPosts);
 };
 
 const updatePosts = (state) => {
-  const promises = state.uiState.feeds.urls.map((url) => axios.get(getProxyForUrl(url))
+  const urls = getUrls(state.uiState.feeds);
+  const promises = urls.map((url) => axios.get(getProxyForUrl(url))
     .then((response) => {
       const existingPostsTitles = getPostsTitles(state.uiState.posts.data);
       const xml = response.data.contents;
@@ -68,7 +59,7 @@ const updatePosts = (state) => {
 
 const setUpdateTracker = (state, delay = 5000) => {
   updatePosts(state)
-    .then(() => setTimeout(setUpdateTracker, delay, state));
+    .finally(() => setTimeout(setUpdateTracker, delay, state));
 };
 
 export default () => {
@@ -96,16 +87,12 @@ export default () => {
       error: 'none',
     },
     uiState: {
-      feeds: {
-        data: [],
-        urls: [],
-      },
+      feeds: [],
       posts: {
         data: [],
-        watchedPostsIds: [],
+        watchedPostsIds: new Set([]),
       },
-      postsState: [],
-      modal: {},
+      modalId: '',
     },
   };
 
@@ -119,9 +106,10 @@ export default () => {
 
     elements.form.addEventListener('submit', (event) => {
       event.preventDefault();
-      const url = elements.inputForm.value;
       state.form.validationState = 'processing';
-      validateUrl(url, state.uiState.feeds.urls)
+      const url = elements.inputForm.value;
+      const urls = getUrls(state.uiState.feeds);
+      validateUrl(url, urls)
         .then(() => {
           state.form.validationState = 'finished';
           state.form.feedAdditionState = 'processing';
@@ -130,12 +118,16 @@ export default () => {
         .then((response) => {
           state.form.feedAdditionState = 'finished';
           const xml = response.data.contents;
-          const { feed, posts } = parser(xml);
+          const { parsedRss, posts } = parser(xml);
           const feedId = uniqueId();
-          feed.id = feedId;
+          const feed = {
+            id: feedId,
+            title: parsedRss.querySelector('title').textContent,
+            description: parsedRss.querySelector('description').textContent,
+            url: url.trim(),
+          };
           createIdsForPosts(posts);
-          state.uiState.feeds.urls.push(url.trim());
-          state.uiState.feeds.data.push(feed);
+          state.uiState.feeds.push(feed);
           state.uiState.posts.data.unshift(...posts);
         })
         .catch((error) => {
@@ -159,10 +151,8 @@ export default () => {
     elements.posts.addEventListener('click', (event) => {
       const postId = event.target.id;
       if (postId) {
-        if (!state.uiState.posts.watchedPostsIds.includes(postId)) {
-          state.uiState.posts.watchedPostsIds.push(postId);
-        }
-        addDataToModal(postId, state);
+        state.uiState.posts.watchedPostsIds.add(postId);
+        state.uiState.modalId = postId;
       }
     });
 
