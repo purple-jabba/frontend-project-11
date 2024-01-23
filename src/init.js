@@ -28,31 +28,28 @@ const getProxyForUrl = (url) => {
 const getPostsTitles = (posts) => posts.map((post) => post.title);
 
 const createIdsForPosts = (items) => {
-  items.forEach((item) => {
+  const itemsWithIds = items.map((item) => {
     const itemId = uniqueId();
     item.id = itemId;
+    return item;
   });
+  return itemsWithIds;
 };
 
 const addNewPosts = (existingPostsTitles, state, posts) => {
-  const newPosts = [];
-  posts.forEach((post) => {
-    if (!existingPostsTitles.includes(post.title)) {
-      newPosts.push(post);
-    }
-  });
-  state.uiState.posts.data.unshift(...newPosts);
+  const newPosts = posts.filter((post) => !existingPostsTitles.includes(post.title));
+  state.data.posts.unshift(...newPosts);
 };
 
 const updatePosts = (state) => {
-  const urls = getUrls(state.uiState.feeds);
+  const urls = getUrls(state.data.feeds);
   const promises = urls.map((url) => axios.get(getProxyForUrl(url))
     .then((response) => {
-      const existingPostsTitles = getPostsTitles(state.uiState.posts.data);
+      const existingPostsTitles = getPostsTitles(state.data.posts);
       const xml = response.data.contents;
       const { posts } = parser(xml);
-      createIdsForPosts(posts);
-      addNewPosts(existingPostsTitles, state, posts);
+      const postsWithIds = createIdsForPosts(posts);
+      addNewPosts(existingPostsTitles, state, postsWithIds);
     }));
   return Promise.all(promises);
 };
@@ -81,18 +78,18 @@ export default () => {
 
   const initialState = {
     lng: defaultLanguage,
+    data: {
+      feeds: [],
+      posts: [],
+    },
     form: {
       validationState: 'initial',
-      feedAdditionState: 'initial',
       error: 'none',
     },
     uiState: {
-      feeds: [],
-      posts: {
-        data: [],
-        watchedPostsIds: new Set([]),
-      },
-      modalId: '',
+      feedAdditionState: 'initial',
+      watchedPostsIds: new Set([]),
+      modalId: 'none',
     },
   };
 
@@ -108,15 +105,15 @@ export default () => {
       event.preventDefault();
       state.form.validationState = 'processing';
       const url = elements.inputForm.value;
-      const urls = getUrls(state.uiState.feeds);
+      const urls = getUrls(state.data.feeds);
       validateUrl(url, urls)
         .then(() => {
           state.form.validationState = 'finished';
-          state.form.feedAdditionState = 'processing';
+          state.uiState.feedAdditionState = 'processing';
           return axios.get(getProxyForUrl(url));
         })
         .then((response) => {
-          state.form.feedAdditionState = 'finished';
+          state.uiState.feedAdditionState = 'finished';
           const xml = response.data.contents;
           const { parsedRss, posts } = parser(xml);
           const feedId = uniqueId();
@@ -126,9 +123,9 @@ export default () => {
             description: parsedRss.querySelector('description').textContent,
             url: url.trim(),
           };
-          createIdsForPosts(posts);
-          state.uiState.feeds.push(feed);
-          state.uiState.posts.data.unshift(...posts);
+          const postsWithIds = createIdsForPosts(posts);
+          state.data.feeds.push(feed);
+          state.data.posts.unshift(...postsWithIds);
         })
         .catch((error) => {
           const { name } = error;
@@ -137,10 +134,10 @@ export default () => {
               state.form.validationState = 'error';
               break;
             case 'ParseError':
-              state.form.feedAdditionState = 'error';
+              state.uiState.feedAdditionState = 'error';
               break;
             case 'AxiosError':
-              state.form.feedAdditionState = 'error';
+              state.uiState.feedAdditionState = 'error';
               break;
             default: throw new Error(`Name doesn't exist ${error}`);
           }
@@ -151,7 +148,7 @@ export default () => {
     elements.posts.addEventListener('click', (event) => {
       const postId = event.target.id;
       if (postId) {
-        state.uiState.posts.watchedPostsIds.add(postId);
+        state.uiState.watchedPostsIds.add(postId);
         state.uiState.modalId = postId;
       }
     });

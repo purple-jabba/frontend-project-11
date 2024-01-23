@@ -48,7 +48,7 @@ const renderModal = (value, state) => {
   const modalTitle = document.querySelector('.modal-title');
   const modalDescription = document.querySelector('.modal-body');
   const fullArticleButton = document.querySelector('.full-article');
-  const selectedElement = state.uiState.posts.data.find((postEl) => postEl.id === value);
+  const selectedElement = state.data.posts.find((postEl) => postEl.id === value);
   modalTitle.textContent = selectedElement.title;
   modalDescription.textContent = selectedElement.description;
   fullArticleButton.setAttribute('href', selectedElement.link);
@@ -119,7 +119,7 @@ const renderUserInterfacePosts = (state, value, i18nextInstance) => {
     li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
     const a = document.createElement('a');
     a.id = post.id;
-    if (!state.uiState.posts.watchedPostsIds.has(post.id)) {
+    if (!state.uiState.watchedPostsIds.has(post.id)) {
       a.classList.add('fw-bold');
     } else {
       a.classList.add('fw-normal', 'link-secondary');
@@ -147,17 +147,17 @@ export default (state, elements, i18nextInstance) => (path, value) => {
     case 'form.validationState':
       renderSubmitInterface(value, elements.inputForm, elements.buttonForm, elements.feedback);
       break;
-    case 'form.feedAdditionState':
+    case 'uiState.feedAdditionState':
       renderSubmitInterface(value, elements.inputForm, elements.buttonForm, elements.feedback);
       break;
-    case 'uiState.feeds':
+    case 'data.feeds':
       renderUserInterfaceFeeds(value, i18nextInstance);
       renderSuccessNotification(elements.inputForm, elements.feedback, i18nextInstance.t('successMessage'));
       break;
-    case 'uiState.posts.data':
+    case 'data.posts':
       renderUserInterfacePosts(state, value, i18nextInstance);
       break;
-    case 'uiState.posts.watchedPostsIds':
+    case 'uiState.watchedPostsIds':
       renderWatchedArticles(value);
       break;
     case 'uiState.modalId':
