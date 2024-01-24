@@ -84,12 +84,16 @@ export default () => {
     },
     form: {
       validationState: 'initial',
-      error: 'none',
+      error: null,
+    },
+    feedAddition: {
+      state: 'initial',
+      error: null,
     },
     uiState: {
       feedAdditionState: 'initial',
       watchedPostsIds: new Set([]),
-      modalId: 'none',
+      modalId: null,
     },
   };
 
@@ -109,18 +113,18 @@ export default () => {
       validateUrl(url, urls)
         .then(() => {
           state.form.validationState = 'finished';
-          state.uiState.feedAdditionState = 'processing';
+          state.feedAddition.state = 'processing';
           return axios.get(getProxyForUrl(url));
         })
         .then((response) => {
-          state.uiState.feedAdditionState = 'finished';
+          state.feedAddition.state = 'finished';
           const xml = response.data.contents;
-          const { parsedRss, posts } = parser(xml);
+          const { title, description, posts } = parser(xml);
           const feedId = uniqueId();
           const feed = {
             id: feedId,
-            title: parsedRss.querySelector('title').textContent,
-            description: parsedRss.querySelector('description').textContent,
+            title,
+            description,
             url: url.trim(),
           };
           const postsWithIds = createIdsForPosts(posts);
@@ -132,16 +136,18 @@ export default () => {
           switch (name) {
             case 'ValidationError':
               state.form.validationState = 'error';
+              state.form.error = error;
               break;
             case 'ParseError':
-              state.uiState.feedAdditionState = 'error';
+              state.feedAddition.state = 'error';
+              state.feedAddition.error = error;
               break;
             case 'AxiosError':
-              state.uiState.feedAdditionState = 'error';
+              state.feedAddition.state = 'error';
+              state.feedAddition.error = error;
               break;
             default: throw new Error(`Name doesn't exist ${error}`);
           }
-          state.form.error = error;
         });
     });
 

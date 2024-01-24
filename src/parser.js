@@ -7,6 +7,9 @@ export default (xml) => {
     throw error;
   }
 
+  const title = parsedRss.querySelector('title').textContent;
+  const description = parsedRss.querySelector('description').textContent;
+
   const items = parsedRss.querySelectorAll('item');
   const posts = [...items].map((item) => {
     const post = {
@@ -16,5 +19,5 @@ export default (xml) => {
     };
     return post;
   });
-  return { parsedRss, posts };
+  return { title, description, posts };
 };

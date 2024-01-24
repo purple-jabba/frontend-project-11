@@ -147,8 +147,14 @@ export default (state, elements, i18nextInstance) => (path, value) => {
     case 'form.validationState':
       renderSubmitInterface(value, elements.inputForm, elements.buttonForm, elements.feedback);
       break;
-    case 'uiState.feedAdditionState':
+    case 'form.error':
+      renderFailNotification(elements.feedback, value, i18nextInstance);
+      break;
+    case 'feedAddition.state':
       renderSubmitInterface(value, elements.inputForm, elements.buttonForm, elements.feedback);
+      break;
+    case 'feedAddition.error':
+      renderFailNotification(elements.feedback, value, i18nextInstance);
       break;
     case 'data.feeds':
       renderUserInterfaceFeeds(value, i18nextInstance);
@@ -162,9 +168,6 @@ export default (state, elements, i18nextInstance) => (path, value) => {
       break;
     case 'uiState.modalId':
       renderModal(value, state);
-      break;
-    case 'form.error':
-      renderFailNotification(elements.feedback, value, i18nextInstance);
       break;
     default: throw new Error(`Path doesn't exist ${path}`);
   }
