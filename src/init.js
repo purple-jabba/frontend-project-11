@@ -91,7 +91,6 @@ export default () => {
       error: null,
     },
     uiState: {
-      feedAdditionState: 'initial',
       watchedPostsIds: new Set([]),
       modalId: null,
     },
